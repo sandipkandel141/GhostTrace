@@ -49,3 +49,5 @@ build/
 
 # Logs
 *.log
+# OpenTelemetry downloaded agent
+observability/opentelemetry-javaagent.jar
