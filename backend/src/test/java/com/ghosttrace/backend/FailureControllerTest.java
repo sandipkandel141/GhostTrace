@@ -15,50 +15,93 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 class FailureControllerTest {
-    @Autowired MockMvc mvc;
+
+    @Autowired
+    MockMvc mvc;
 
     @Test
     void createsAndFindsFailure() throws Exception {
         mvc.perform(post("/api/failures")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(""" 
-                    {"failureId":"ERR-101","serviceName":"PaymentService",
-                     "errorMessage":"Database timeout","severity":"HIGH"}
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "failureId": "ERR-101",
+                      "serviceName": "PaymentService",
+                      "errorMessage": "Database timeout",
+                      "severity": "HIGH"
+                    }
                     """))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.failureId").value("ERR-101"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.failureId").value("ERR-101"));
 
         mvc.perform(get("/api/failures/ERR-101"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.serviceName").value("PaymentService"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.serviceName").value("PaymentService"));
     }
 
     @Test
     void rejectsInvalidInput() throws Exception {
         mvc.perform(post("/api/failures")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {"failureId":"","serviceName":"PaymentService",
-                     "errorMessage":"Timeout","severity":"HIGH"}
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "failureId": "",
+                      "serviceName": "PaymentService",
+                      "errorMessage": "Timeout",
+                      "severity": "HIGH"
+                    }
                     """))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void returnsNotFoundForUnknownId() throws Exception {
         mvc.perform(get("/api/failures/UNKNOWN"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void rejectsDuplicateIds() throws Exception {
         String payload = """
-            {"failureId":"DUP-1","serviceName":"LoginService",
-             "errorMessage":"Bad token","severity":"MEDIUM"}
+            {
+              "failureId": "DUP-1",
+              "serviceName": "LoginService",
+              "errorMessage": "Bad token",
+              "severity": "MEDIUM"
+            }
             """;
-        mvc.perform(post("/api/failures").contentType(MediaType.APPLICATION_JSON).content(payload))
-            .andExpect(status().isCreated());
-        mvc.perform(post("/api/failures").contentType(MediaType.APPLICATION_JSON).content(payload))
-            .andExpect(status().isConflict());
+
+        mvc.perform(post("/api/failures")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isCreated());
+
+        mvc.perform(post("/api/failures")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void createsAndFindsFailureWithTraceId() throws Exception {
+        String traceId = "1234567890abcdef1234567890abcdef";
+
+        mvc.perform(post("/api/failures")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "failureId": "TRACE-101",
+                      "serviceName": "PaymentService",
+                      "errorMessage": "Payment timeout",
+                      "severity": "HIGH",
+                      "traceId": "1234567890abcdef1234567890abcdef"
+                    }
+                    """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.traceId").value(traceId));
+
+        mvc.perform(get("/api/failures/TRACE-101"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.traceId").value(traceId));
     }
 }

@@ -1,3 +1,4 @@
+
 package com.ghosttrace.backend;
 
 import org.springframework.http.HttpStatus;
@@ -15,10 +16,18 @@ public class FailureService {
 
     public FailureEntity create(CreateFailureRequest request) {
         if (repository.existsById(request.failureId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Failure ID already exists");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Failure ID already exists"
+            );
         }
-        return repository.save(new FailureEntity(request.failureId(), request.serviceName(),
-            request.errorMessage(), request.severity()));
+
+        return repository.save(new FailureEntity(
+                request.failureId(),
+                request.serviceName(),
+                request.errorMessage(),
+                request.severity(),
+                request.traceId()
+        ));
     }
 
     public List<FailureEntity> findAll(String service) {
@@ -30,8 +39,12 @@ public class FailureService {
 
     public FailureEntity findById(String id) {
         return repository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Failure not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Failure not found"
+                ));
     }
 
-    public long count() { return repository.count(); }
+    public long count() {
+        return repository.count();
+    }
 }

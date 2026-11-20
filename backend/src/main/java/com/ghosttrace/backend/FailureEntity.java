@@ -1,3 +1,4 @@
+
 package com.ghosttrace.backend;
 
 import jakarta.persistence.*;
@@ -23,13 +24,32 @@ public class FailureEntity {
     @Column(nullable = false)
     private Instant occurredAt;
 
+    @Column(length = 32)
+    private String traceId;
+
     protected FailureEntity() { }
 
-    public FailureEntity(String failureId, String serviceName, String errorMessage, FailureSeverity severity) {
+    public FailureEntity(
+            String failureId,
+            String serviceName,
+            String errorMessage,
+            FailureSeverity severity
+    ) {
+        this(failureId, serviceName, errorMessage, severity, null);
+    }
+
+    public FailureEntity(
+            String failureId,
+            String serviceName,
+            String errorMessage,
+            FailureSeverity severity,
+            String traceId
+    ) {
         this.failureId = failureId;
         this.serviceName = serviceName;
         this.errorMessage = errorMessage;
         this.severity = severity;
+        this.traceId = traceId;
         this.occurredAt = Instant.now();
     }
 
@@ -38,4 +58,5 @@ public class FailureEntity {
     public String getErrorMessage() { return errorMessage; }
     public FailureSeverity getSeverity() { return severity; }
     public Instant getOccurredAt() { return occurredAt; }
+    public String getTraceId() { return traceId; }
 }
